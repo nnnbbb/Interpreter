@@ -1,10 +1,18 @@
-const {
-  Token,
-  INTEGER,
-  PLUS,
-  MINUS,
-  EOF
-} = require('./Interpreter')
+const { INTEGER, PLUS, MINUS, MUL, DIV, LPAREN, RPAREN, EOF } = require('.')
+
+class Token {
+  constructor(type, value) {
+    this.type = type
+    this.value = value
+  }
+}
+
+function isdigit(str) {
+  let n = str - parseFloat(str)
+  // log(n)
+  // log(isNaN(n))
+  return !isNaN(n)
+}
 
 class Lexer {
   constructor(text) {
@@ -53,38 +61,28 @@ class Lexer {
         this.advance()
         return new Token(MINUS, '-')
       }
+      if (this.currentChar == '*') {
+        this.advance()
+        return new Token(MUL, '*')
+      }
+      if (this.currentChar == '/') {
+        this.advance()
+        return new Token(DIV, '/')
+      }
+      if (this.currentChar == '(') {
+        this.advance()
+        return new Token(LPAREN, '(')
+      }
+      if (this.currentChar == ')') {
+        this.advance()
+        return new Token(RPAREN, ')')
+      }
       this.error()
     }
     return new Token(EOF, undefined)
   }
-  eat(tokenType) {
-    if (this.currentToken.type == tokenType) {
-      this.currentToken = this.getNextToken()
-    } else {
-      this.error()
-    }
-  }
-  error() {
-    throw new Error('Error parsing input this.currentChar: ' + this.currentChar)
-  }
-  term() {
-    let token = this.currentToken
-    this.eat(INTEGER)
-    return token.value
-  }
-  expr() {
-    this.currentToken = this.getNextToken()
-    let result = this.term()
-    while ([PLUS, MINUS].includes(this.currentToken.type)) {
-      let token = this.currentToken
-      if (token.type == PLUS) {
-        this.eat(PLUS)
-        result = result + this.term()
-      } else if (token.type == MINUS) {
-        this.eat(MINUS)
-        result = result - this.term()
-      }
-    }
-    return result
-  }
+}
+
+module.exports = {
+  Lexer,
 }

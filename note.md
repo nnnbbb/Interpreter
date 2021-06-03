@@ -97,6 +97,6 @@ part10
   eat(ID)
   a, b, c, x : INTEGER;
    ^
-
+ 
 
 
