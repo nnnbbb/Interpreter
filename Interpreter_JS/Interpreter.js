@@ -1,69 +1,52 @@
 const { log } = console
-const { INTEGER, PLUS, MINUS, MUL, DIV, LPAREN, RPAREN, EOF } = require('.')
+const { PLUS, MINUS, MUL, DIV } = require('.')
 const { Lexer } = require('./Lexer')
+const { Parser } = require('./Parser')
 
-class Interpreter {
-  constructor(lexer) {
-    this.lexer = lexer
-    this.currentToken = this.lexer.getNextToken()
-  }
-  eat(tokenType) {
-    if (this.currentToken.type == tokenType) {
-      this.currentToken = this.lexer.getNextToken()
-    } else {
-      this.error()
-    }
-  }
-  error() {
-    throw new Error('Error parsing input this.currentChar: ' + this.currentChar)
-  }
-  factor() {
-    let token = this.currentToken
-    if (token.type == INTEGER) {
-      this.eat(INTEGER)
-      return token.value
-    } else if (token.type == LPAREN) {
-      this.eat(LPAREN)
-      let result = this.expr()
-      this.eat(RPAREN)
-      return result
-    }
-  }
-  term() {
-    let result = this.factor()
-    let token = this.currentToken
-    while ([MUL, DIV].includes(token.type)) {
-      if (token.type == MUL) {
-        this.eat(MUL)
-        return (result = result * this.factor())
-      } else if (token.type == DIV) {
-        this.eat(DIV)
-        return (result = result / this.factor())
-      }
-    }
-    return result
-  }
-  expr() {
-    let result = this.term()
-    while ([PLUS, MINUS].includes(this.currentToken.type)) {
-      let token = this.currentToken
-      if (token.type == PLUS) {
-        this.eat(PLUS)
-        result = result + this.term()
-      } else if (token.type == MINUS) {
-        this.eat(MINUS)
-        result = result - this.term()
-      }
-    }
-    return result
+class NodeVisitor {
+  constructor() {}
+  visit(node) {
+    let method_name = 'visit' + node.constructor.name
+    return this[method_name](node)
   }
 }
+class Interpreter extends NodeVisitor {
+  constructor(parser) {
+    super()
+    this.parser = parser
+  }
+  visitBinOp(node) {
+    let visit = this.visit.bind(this)
+    if (node.operator.type == PLUS) {
+      return visit(node.left) + visit(node.right)
+    }
+    if (node.operator.type == MINUS) {
+      return visit(node.left) - visit(node.right)
+    }
+    if (node.operator.type == MUL) {
+      return visit(node.left) * visit(node.right)
+    }
+    if (node.operator.type == DIV) {
+      return visit(node.left) / visit(node.right)
+    }
+  }
+  visitNum(node) {
+    return node.value
+  }
+  interpret() {
+    let tree = this.parser.parse()
+    return this.visit(tree)
+  }
+}
+
 const main = function () {
-  let text = '3 + 5*(10-2)'
+  let text = '3 + 5 * (10 - 2)'
   let lexer = new Lexer(text)
-  let i = new Interpreter(lexer)
-  let r = i.expr()
-  log('r', r)
+  let parser = new Parser(lexer)
+
+  let interpreter = new Interpreter(parser)
+  let interpret = interpreter.interpret()
+  log('interpret', interpret)
 }
 
 main()

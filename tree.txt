@@ -1,0 +1,58 @@
+{
+    "left": {
+        "token": {
+            "type": "INTEGER",
+            "value": 3
+        },
+        "value": 3
+    },
+    "operator": {
+        "type": "PLUS",
+        "value": "+"
+    },
+    "token": {
+        "type": "PLUS",
+        "value": "+"
+    },
+    "right": {
+        "left": {
+            "token": {
+                "type": "INTEGER",
+                "value": 5
+            },
+            "value": 5
+        },
+        "operator": {
+            "type": "MUL",
+            "value": "*"
+        },
+        "token": {
+            "type": "MUL",
+            "value": "*"
+        },
+        "right": {
+            "left": {
+                "token": {
+                    "type": "INTEGER",
+                    "value": 10
+                },
+                "value": 10
+            },
+            "operator": {
+                "type": "MINUS",
+                "value": "-"
+            },
+            "token": {
+                "type": "MINUS",
+                "value": "-"
+            },
+            "right": {
+                "token": {
+                    "type": "INTEGER",
+                    "value": 2
+                },
+                "value": 2
+            }
+        }
+    }
+}

@@ -1,5 +1,5 @@
 const { INTEGER, PLUS, MINUS, MUL, DIV, LPAREN, RPAREN, EOF } = require('.')
-
+const log = console.log.bind(console)
 class Token {
   constructor(type, value) {
     this.type = type
@@ -82,7 +82,6 @@ class Lexer {
     return new Token(EOF, undefined)
   }
 }
-
 module.exports = {
   Lexer,
 }
