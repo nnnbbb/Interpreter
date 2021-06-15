@@ -1,9 +1,8 @@
-const { INTEGER, PLUS, MINUS, MUL, DIV, LPAREN, RPAREN, EOF } = require('.')
+const { INTEGER, PLUS, MINUS, MUL, DIV, LPAREN, RPAREN, EOF } = require('..')
 const { BinOp } = require('./BinOp')
 const { Num } = require('./Num')
-const log = function (...args) {}
-// log('Parser Num', Num)
-// log('Parser BinOp', BinOp)
+const { UnaryOp } = require('./UnaryOp')
+
 class Parser {
   constructor(lexer) {
     this.lexer = lexer
@@ -29,8 +28,13 @@ class Parser {
       this.eat(LPAREN)
       node = this.expr()
       this.eat(RPAREN)
+    } else if (token.type == PLUS) {
+      this.eat(PLUS)
+      node = UnaryOp.new(token, this.factor())
+    } else if (token.type == MINUS) {
+      this.eat(MINUS)
+      node = UnaryOp.new(token, this.factor())
     }
-    log('expr factor', node, token)
     return node
   }
   term() {
@@ -44,8 +48,6 @@ class Parser {
       }
       node = BinOp.new(node, token, this.factor())
     }
-    log('expr term', node)
-
     return node
   }
   expr() {
@@ -59,13 +61,10 @@ class Parser {
       }
       node = BinOp.new(node, token, this.term())
     }
-    log('expr node', node)
-
     return node
   }
   parse() {
     let expr = this.expr()
-    log('parse expr', expr)
     return expr
   }
 }
