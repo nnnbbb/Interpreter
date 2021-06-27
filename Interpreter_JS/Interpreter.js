@@ -14,6 +14,7 @@ class Interpreter extends NodeVisitor {
   constructor(parser) {
     super()
     this.parser = parser
+    this.GLOBAL_SCOPE = {}
   }
   visitUnaryOp(node) {
     let visit = this.visit.bind(this)
@@ -42,6 +43,26 @@ class Interpreter extends NodeVisitor {
   visitNum(node) {
     return node.value
   }
+  visitNoOp(node) {}
+  visitAssign(node) {
+    let varName = node.left.value
+    this.GLOBAL_SCOPE[varName] = this.visit(node.right)
+  }
+  visitVar(node) {
+    let varName = node.value
+    let val = this.GLOBAL_SCOPE[varName]
+    if (val == undefined) {
+      throw new Error(`NameError varName ${varName}`)
+    } else {
+      return val
+    }
+  }
+  visitCompound(node) {
+    let visit = this.visit.bind(this)
+    for (const child of node.children) {
+      visit(child)
+    }
+  }
   interpret() {
     let tree = this.parser.parse()
     // console.log('tree', tree)
@@ -50,12 +71,22 @@ class Interpreter extends NodeVisitor {
 }
 
 const main = function () {
-  let text = '10---2'
+  let text = `BEGIN
+                  BEGIN
+                      number := 2;
+                      a := number;
+                      b := 10 * a + 10 * number / 4;
+                      d := 3;
+                      c := a - - b + d;
+                  END;
+                  x := 11;
+              END.
+             `
+
   let lexer = new Lexer(text)
   let parser = new Parser(lexer)
   let interpreter = new Interpreter(parser)
   let interpret = interpreter.interpret()
-  log('interpret', interpret)
+  log('interpret', interpreter.GLOBAL_SCOPE)
 }
-
 main()

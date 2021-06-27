@@ -5,6 +5,12 @@ const MUL = 'MUL'
 const DIV = 'DIV'
 const LPAREN = 'LPAREN'
 const RPAREN = 'RPAREN'
+const ID = 'ID'
+const ASSIGN = 'ASSIGN'
+const BEGIN = 'BEGIN'
+const END = 'END'
+const SEMI = 'SEMI'
+const DOT = 'DOT'
 const EOF = 'EOF'
 
 module.exports = {
@@ -16,4 +22,10 @@ module.exports = {
   LPAREN,
   RPAREN,
   EOF,
+  ID,
+  ASSIGN,
+  BEGIN,
+  END,
+  SEMI,
+  DOT,
 }
