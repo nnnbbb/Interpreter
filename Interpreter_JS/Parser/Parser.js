@@ -1,4 +1,28 @@
-const { INTEGER, PLUS, MINUS, MUL, DIV, LPAREN, RPAREN, ID, ASSIGN, BEGIN, END, SEMI, EOF, DOT } = require('..')
+const {
+  INTEGER,
+  PLUS,
+  MINUS,
+  MUL,
+  DIV,
+  LPAREN,
+  RPAREN,
+  ID,
+  ASSIGN,
+  BEGIN,
+  END,
+  SEMI,
+  PROGRAM,
+  VAR,
+  COLON,
+  COMMA,
+  INTEGER_DIV,
+  FLOAT_DIV,
+  INTEGER_CONST,
+  REAL_CONST,
+  REAL,
+  DOT,
+  EOF,
+} = require('..')
 const { BinOp } = require('./BinOp')
 const { Num } = require('./Num')
 const { UnaryOp } = require('./UnaryOp')
@@ -6,13 +30,19 @@ const { Compound } = require('./Compound')
 const { Assign } = require('./Assign')
 const { Var } = require('./Var')
 const { NoOp } = require('./NoOp')
+const { Block } = require('./Block')
+const { Program } = require('./Program')
+const { Type } = require('./Type')
+const { VarDecl } = require('./VarDecl')
+const { Lexer } = require('../Lexer')
+const { log } = require('../log')
 
 class Parser {
   constructor(lexer) {
     this.lexer = lexer
     this.currentToken = this.lexer.getNextToken()
   }
-  eat(tokenType) {
+  eat (tokenType) {
     // console.log('eat tokenType', tokenType)
     // console.log('eat currentToken', this.currentToken)
     if (this.currentToken.type == tokenType) {
@@ -21,13 +51,67 @@ class Parser {
       this.error()
     }
   }
-  program() {
-    // """program : compoundStatement DOT"""
-    let node = this.compoundStatement()
+  program () {
+    // program : PROGRAM variable SEMI block DOT
+    this.eat(PROGRAM)
+    let varNode = this.variable()
+    let progName = varNode.value
+    this.eat(SEMI)
+    let blockNode = this.block()
+    let programNode = Program.new(progName, blockNode)
     this.eat(DOT)
+    return programNode
+  }
+  block () {
+    // block : declarations compoundStatement
+    let declarationNodes = this.declarations()
+    let compoundStatementNode = this.compoundStatement()
+    let node = Block.new(declarationNodes, compoundStatementNode)
     return node
   }
-  compoundStatement() {
+  declarations () {
+    // declarations : VAR (variableDeclaration SEMI)+
+    //              | empty
+    let declarations = []
+    if (this.currentToken.type == VAR) {
+      this.eat(VAR)
+    }
+    while (this.currentToken.type == ID) {
+      let varDecl = this.variableDeclaration()
+      declarations.concat(varDecl)
+      this.eat(SEMI)
+    }
+    return declarations
+  }
+  variableDeclaration () {
+    // variable_declaration : ID (COMMA ID)* COLON type_spec
+    let varNodes = [Var.new(this.currentToken)]  // first ID
+    this.eat(ID)
+
+    while (this.currentToken.type == COMMA) {
+      this.eat(COMMA)
+      varNodes.push(Var.new(this.currentToken))
+      this.eat(ID)
+    }
+    this.eat(COLON)
+    let typeNode = this.typeSpec()
+    let varDeclarations = varNodes.map((varNode) => VarDecl.new(varNode, typeNode))
+    return varDeclarations
+  }
+  typeSpec () {
+    // type_spec : INTEGER
+    //           | REAL    
+    let token = this.currentToken
+    if (this.currentToken.type == INTEGER) {
+      this.eat(INTEGER)
+    } else {
+      this.eat(REAL)
+    }
+    let node = Type.new(token)
+    return node
+
+  }
+  compoundStatement () {
     // compoundStatement: BEGIN statementList END
     this.eat(BEGIN)
     let nodes = this.statementList()
@@ -39,7 +123,7 @@ class Parser {
     }
     return root
   }
-  statementList() {
+  statementList () {
     // statementList : statement
     //                | statement SEMI statementList
     let node = this.statement()
@@ -57,7 +141,7 @@ class Parser {
 
     return results
   }
-  statement() {
+  statement () {
     // statement : compound_statement
     //           | assignment_statement
     //           | empty
@@ -71,7 +155,7 @@ class Parser {
     }
     return node
   }
-  assignmentStatement() {
+  assignmentStatement () {
     // assignmentStatement : variable ASSIGN expr
     let left = this.variable()
     let token = this.currentToken
@@ -80,21 +164,29 @@ class Parser {
     let node = Assign.new(left, token, right)
     return node
   }
-  variable() {
+  variable () {
     // variable: ID
     // console.log('variable currentToken', this.currentToken)
     let node = Var.new(this.currentToken)
     this.eat(ID)
     return node
   }
-  empty() {
+  empty () {
     //  An empty production
     return NoOp.new()
   }
-  error() {
+  error () {
     throw new Error('Error parsing input currentToken value: ' + this.currentToken.value)
   }
-  factor() {
+  factor () {
+    /**
+    factor : PLUS factor
+           | MINUS factor
+           | INTEGER_CONST
+           | REAL_CONST
+           | LPAREN expr RPAREN
+           | variable
+    */
     let token = this.currentToken
     let node
     if (token.type == INTEGER) {
@@ -104,6 +196,12 @@ class Parser {
       this.eat(LPAREN)
       node = this.expr()
       this.eat(RPAREN)
+    } else if (token.type == INTEGER_CONST) {
+      this.eat(INTEGER_CONST)
+      return Num.new(token)
+    } else if (token.type == REAL_CONST) {
+      this.eat(REAL_CONST)
+      return Num.new(token)
     } else if (token.type == PLUS) {
       this.eat(PLUS)
       node = UnaryOp.new(token, this.factor())
@@ -116,20 +214,23 @@ class Parser {
     }
     return node
   }
-  term() {
+  term () {
+    // term : factor ((MUL | INTEGER_DIV | FLOAT_DIV) factor)*
     let node = this.factor()
-    while ([MUL, DIV].includes(this.currentToken.type)) {
+    while ([MUL, INTEGER_DIV, FLOAT_DIV].includes(this.currentToken.type)) {
       let token = this.currentToken
       if (token.type == MUL) {
         this.eat(MUL)
-      } else if (token.type == DIV) {
-        this.eat(DIV)
+      } else if (token.type == INTEGER_DIV) {
+        this.eat(INTEGER_DIV)
+      } else if (token.type == FLOAT_DIV) {
+        this.eat(FLOAT_DIV)
       }
       node = BinOp.new(node, token, this.factor())
     }
     return node
   }
-  expr() {
+  expr () {
     let node = this.term()
     while ([PLUS, MINUS].includes(this.currentToken.type)) {
       let token = this.currentToken
@@ -142,7 +243,7 @@ class Parser {
     }
     return node
   }
-  parse() {
+  parse () {
     let node = this.program()
     if (this.currentToken.type != EOF) {
       this.error()
@@ -154,3 +255,24 @@ class Parser {
 module.exports = {
   Parser,
 }
+function test () {
+  let text = `
+              PROGRAM Part10AST;
+              VAR
+                a, b : INTEGER;
+                y    : REAL;
+
+              BEGIN {Part10AST}
+                a := 2;
+                b := 10 * a + 10 * a DIV 4;
+                y := 20 / 7 + 3.14;
+              END.  {Part10AST}
+             `
+  let lexer = new Lexer(text)
+  let parser = new Parser(lexer)
+  let tree = parser.parse()
+  console.log(tree)
+  // JSON.stringify(arguments[i], null, 2)
+}
+
+test()

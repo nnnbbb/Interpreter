@@ -1,4 +1,25 @@
-const { INTEGER, PLUS, MINUS, MUL, DIV, LPAREN, RPAREN, ID, ASSIGN, BEGIN, END, SEMI, DOT, EOF } = require('.')
+const {
+  INTEGER,
+  PLUS,
+  MINUS,
+  MUL,
+  DIV,
+  LPAREN,
+  RPAREN,
+  ID,
+  ASSIGN,
+  BEGIN,
+  END,
+  SEMI,
+  PROGRAM,
+  VAR,
+  COLON,
+  COMMA,
+  INTEGER_DIV,
+  FLOAT_DIV,
+  DOT,
+  EOF,
+} = require('.')
 const log = console.log.bind(console)
 class Token {
   constructor(type, value) {
@@ -20,6 +41,11 @@ String.prototype.isdigit = function () {
 }
 
 const RESERVED_KEYWORDS = {
+  PROGRAM: new Token('PROGRAM', 'PROGRAM'),
+  VAR: new Token('VAR', 'VAR'),
+  DIV: new Token('INTEGER_DIV', 'DIV'),
+  INTEGER: new Token('INTEGER', 'INTEGER'),
+  REAL: new Token('REAL', 'REAL'),
   BEGIN: new Token('BEGIN', 'BEGIN'),
   END: new Token('END', 'END'),
 }
@@ -33,7 +59,40 @@ class Lexer {
     this.currentToken = ''
     this.currentChar = this.text[this.pos]
   }
-  peek() {
+  skipComment () {
+    while (this.currentChar != '}') {
+      this.advance()
+    }
+    this.advance()  // the closing curly brace
+  }
+  skipComment1 () {
+    while (this.currentChar != '\n') {
+      this.advance()
+    }
+    this.advance()  // the closing curly brace
+  }
+  number () {
+    // """Return a (multidigit) integer or float consumed from the input."""
+    let result = ''
+    let token
+    while (this.currentChar != undefined && this.currentChar.isdigit()) {
+      result += this.currentChar
+      this.advance()
+    }
+    if (this.currentChar == '.') {
+      result += this.currentChar
+      this.advance()
+      while (this.currentChar != undefined && this.currentChar.isdigit()) {
+        result += this.currentChar
+        this.advance()
+        token = new Token('REAL_CONST', Number(result))
+      }
+    } else {
+      token = new Token('INTEGER_CONST', Number(result))
+    }
+    return token
+  }
+  peek () {
     let peek_pos = this.pos + 1
     if (peek_pos > this.text.length - 1) {
       return null
@@ -42,31 +101,31 @@ class Lexer {
     }
   }
 
-  advance() {
+  advance () {
     this.pos += 1
     if (this.currentChar != undefined) {
       this.currentChar = this.text[this.pos]
     }
   }
-  skipWhitespace() {
+  skipWhitespace () {
     while (this.currentChar != undefined && this.currentChar.isspace()) {
       this.advance()
     }
   }
-  integer() {
-    let result = ''
-    while (this.currentChar != undefined && this.currentChar.isdigit()) {
-      result += this.currentChar
-      this.advance()
-    }
-    return Number(result)
-  }
-  error() {
+  // integer () {
+  //   let result = ''
+  //   while (this.currentChar != undefined && this.currentChar.isdigit()) {
+  //     result += this.currentChar
+  //     this.advance()
+  //   }
+  //   return Number(result)
+  // }
+  error () {
     console.log('this.currentChar.charCodeAt()', this.currentChar.charCodeAt())
     let message = `lexer error currentChar '${this.currentChar}' pos ${this.pos}`
     throw new Error(message)
   }
-  _id() {
+  _id () {
     let result = ''
     while (this.currentChar != undefined && this.currentChar.isalnum()) {
       result += this.currentChar
@@ -76,7 +135,7 @@ class Lexer {
     return token
   }
 
-  getNextToken() {
+  getNextToken () {
     while (this.currentChar != undefined) {
       if (this.currentChar.isspace()) {
         this.skipWhitespace()
@@ -85,13 +144,36 @@ class Lexer {
       if (this.currentChar.isalpha()) {
         return this._id()
       }
+      if (this.currentChar == '{') {
+        this.advance()
+        this.skipComment1()
+        continue
+      }
+      if (this.currentChar == '/' && this.peek() == '/') {
+        this.advance()
+        this.advance()
+        this.skipComment()
+        continue
+      }
       if (this.currentChar.isdigit()) {
-        return new Token(INTEGER, this.integer())
+        return this.number()
+      }
+      if (this.currentChar == ',') {
+        this.advance()
+        return new Token(COMMA, ',')
+      }
+      if (this.currentChar == '/') {
+        this.advance()
+        return new Token(FLOAT_DIV, '/')
       }
       if (this.currentChar == ':' && this.peek() == '=') {
         this.advance()
         this.advance()
         return new Token(ASSIGN, ':=')
+      }
+      if (this.currentChar == ':') {
+        this.advance()
+        return new Token(COLON, ':')
       }
       if (this.currentChar == ';') {
         this.advance()
@@ -133,23 +215,41 @@ class Lexer {
 module.exports = {
   Lexer,
 }
-function test() {
-  let lexer = new Lexer('BEGIN a := 2; END.')
-  log(lexer.getNextToken())
-  // Token(BEGIN, 'BEGIN')
-  log(lexer.getNextToken())
-  // Token(ID, 'a')
-  log(lexer.getNextToken())
-  // Token(ASSIGN, ':=')
-  log(lexer.getNextToken())
-  // Token(INTEGER, 2)
-  log(lexer.getNextToken())
-  // Token(SEMI, ';')
-  log(lexer.getNextToken())
-  // Token(END, 'END')
-  log(lexer.getNextToken())
-  // Token(DOT, '.')
-  log(lexer.getNextToken())
-  // Token(EOF, None)
+function test () {
+  let text = `
+              PROGRAM Part10;
+              
+              VAR
+                number     : INTEGER;
+                a, b, c, x : INTEGER;
+                y          : REAL;
+
+              BEGIN {Part10}
+                BEGIN
+                    number := 2;
+                    a := number;
+                    b := 10 * a + 10 * number DIV 4;
+                    c := a - - b
+                END;
+                x := 11;
+                y := 20 / 7 + 3.14;
+                // writeln('a = ', a); 
+                // writeln('b = ', b); 
+                // writeln('c = ', c); 
+                // writeln('number = ', number); 
+                // writeln('x = ', x); 
+                // writeln('y = ', y); 
+              END.  {Part10}
+             `
+  let lexer = new Lexer(text)
+  while (true) {
+    let token = lexer.getNextToken()
+    if (token.value == null) {
+      log(token)
+      break
+    } else {
+      log(token)
+    }
+  }
 }
-// test()
+test()

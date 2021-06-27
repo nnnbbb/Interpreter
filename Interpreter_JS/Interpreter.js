@@ -1,11 +1,11 @@
 const { log } = console
-const { PLUS, MINUS, MUL, DIV } = require('.')
+const { PLUS, MINUS, MUL, DIV, INTEGER_DIV, FLOAT_DIV } = require('.')
 const { Lexer } = require('./Lexer')
 const { Parser } = require('./Parser/Parser')
 
 class NodeVisitor {
-  constructor() {}
-  visit(node) {
+  constructor() { }
+  visit (node) {
     let methodName = 'visit' + node.constructor.name
     return this[methodName](node)
   }
@@ -16,7 +16,7 @@ class Interpreter extends NodeVisitor {
     this.parser = parser
     this.GLOBAL_SCOPE = {}
   }
-  visitUnaryOp(node) {
+  visitUnaryOp (node) {
     let visit = this.visit.bind(this)
     let type = node.token.type
     if (type == PLUS) {
@@ -25,7 +25,7 @@ class Interpreter extends NodeVisitor {
       return -visit(node.expr)
     }
   }
-  visitBinOp(node) {
+  visitBinOp (node) {
     let visit = this.visit.bind(this)
     if (node.operator.type == PLUS) {
       return visit(node.left) + visit(node.right)
@@ -36,19 +36,33 @@ class Interpreter extends NodeVisitor {
     if (node.operator.type == MUL) {
       return visit(node.left) * visit(node.right)
     }
-    if (node.operator.type == DIV) {
+    if (node.operator.type == INTEGER_DIV) {
+      return visit(node.left) / visit(node.right)
+    }
+    if (node.operator.type == FLOAT_DIV) {
       return visit(node.left) / visit(node.right)
     }
   }
-  visitNum(node) {
+  visitNum (node) {
     return node.value
   }
-  visitNoOp(node) {}
-  visitAssign(node) {
+  visitProgram (node) {
+    let visit = this.visit.bind(this)
+    visit(node.block)
+  }
+  visitBlock (node) {
+    let visit = this.visit.bind(this)
+    node.declarations.map(declaration => visit(declaration))
+    visit(node.compoundStatement)
+  }
+  visitVarDecl (node) { }
+  visitType (node) { }
+  visitNoOp (node) { }
+  visitAssign (node) {
     let varName = node.left.value
     this.GLOBAL_SCOPE[varName] = this.visit(node.right)
   }
-  visitVar(node) {
+  visitVar (node) {
     let varName = node.value
     let val = this.GLOBAL_SCOPE[varName]
     if (val == undefined) {
@@ -57,13 +71,13 @@ class Interpreter extends NodeVisitor {
       return val
     }
   }
-  visitCompound(node) {
+  visitCompound (node) {
     let visit = this.visit.bind(this)
     for (const child of node.children) {
       visit(child)
     }
   }
-  interpret() {
+  interpret () {
     let tree = this.parser.parse()
     // console.log('tree', tree)
     return this.visit(tree)
@@ -71,16 +85,17 @@ class Interpreter extends NodeVisitor {
 }
 
 const main = function () {
-  let text = `BEGIN
-                  BEGIN
-                      number := 2;
-                      a := number;
-                      b := 10 * a + 10 * number / 4;
-                      d := 3;
-                      c := a - - b + d;
-                  END;
-                  x := 11;
-              END.
+  let text = `
+              PROGRAM Part10AST;
+              VAR
+                a, b : INTEGER;
+                y    : REAL;
+
+              BEGIN {Part10AST}
+                a := 2;
+                b := 10 * a + 10 * a DIV 4;
+                y := 20 / 7 + 3.14;
+              END.  {Part10AST}
              `
 
   let lexer = new Lexer(text)
