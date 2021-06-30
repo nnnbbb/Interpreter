@@ -59,6 +59,9 @@ class Lexer {
     this.currentToken = ''
     this.currentChar = this.text[this.pos]
   }
+  static new (...args) {
+    return new this(...args)
+  }
   skipComment () {
     while (this.currentChar != '}') {
       this.advance()
@@ -252,4 +255,6 @@ function test () {
     }
   }
 }
-test()
+if (require.main === module) {
+  test()
+}

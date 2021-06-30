@@ -1,19 +1,14 @@
 const { log } = console
 const { PLUS, MINUS, MUL, DIV, INTEGER_DIV, FLOAT_DIV } = require('.')
 const { Lexer } = require('./Lexer')
+const { NodeVisitor } = require('./NodeVisitor')
 const { Parser } = require('./Parser/Parser')
+const { SymbolTableBuilder } = require('./Symbol/SymbolTableBuilder')
 
-class NodeVisitor {
-  constructor() { }
-  visit (node) {
-    let methodName = 'visit' + node.constructor.name
-    return this[methodName](node)
-  }
-}
 class Interpreter extends NodeVisitor {
-  constructor(parser) {
+  constructor(tree) {
     super()
-    this.parser = parser
+    this.tree = tree
     this.GLOBAL_SCOPE = {}
   }
   visitUnaryOp (node) {
@@ -78,8 +73,11 @@ class Interpreter extends NodeVisitor {
     }
   }
   interpret () {
-    let tree = this.parser.parse()
+    let tree = this.tree
     // console.log('tree', tree)
+    if (tree == undefined) {
+      return ''
+    }
     return this.visit(tree)
   }
 }
@@ -97,11 +95,25 @@ const main = function () {
                 y := 20 / 7 + 3.14;
               END.  {Part10AST}
              `
-
   let lexer = new Lexer(text)
   let parser = new Parser(lexer)
-  let interpreter = new Interpreter(parser)
+  let tree = parser.parse()
+  let interpreter = new Interpreter(tree)
+  let symbolTableBuilder = SymbolTableBuilder.new()
+  symbolTableBuilder.visit(tree)
+  log('')
+  log('Symbol Table contents:')
+  log(symbolTableBuilder.symbolsTable)
   let interpret = interpreter.interpret()
-  log('interpret', interpreter.GLOBAL_SCOPE)
+
+  log('')
+  log('Run-time GLOBAL_MEMORY contents:')
+  const scope = interpreter.GLOBAL_SCOPE
+  for (const key in scope) {
+    log(`${key} = ${scope[key]}`)
+  }
 }
-main()
+
+if (require.main === module) {
+  main()
+}

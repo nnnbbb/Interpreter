@@ -35,12 +35,15 @@ const { Program } = require('./Program')
 const { Type } = require('./Type')
 const { VarDecl } = require('./VarDecl')
 const { Lexer } = require('../Lexer')
-const { log } = require('../log')
+// const { log } = require('../log')
 
 class Parser {
   constructor(lexer) {
     this.lexer = lexer
     this.currentToken = this.lexer.getNextToken()
+  }
+  static new (...args) {
+    return new this(...args)
   }
   eat (tokenType) {
     // console.log('eat tokenType', tokenType)
@@ -78,7 +81,7 @@ class Parser {
     }
     while (this.currentToken.type == ID) {
       let varDecl = this.variableDeclaration()
-      declarations.concat(varDecl)
+      declarations = declarations.concat(varDecl)
       this.eat(SEMI)
     }
     return declarations
@@ -271,8 +274,11 @@ function test () {
   let lexer = new Lexer(text)
   let parser = new Parser(lexer)
   let tree = parser.parse()
-  console.log(tree)
-  // JSON.stringify(arguments[i], null, 2)
+  const util = require('util')
+  console.log(util.inspect(tree, { depth: 8 }))
 }
 
-test()
+
+if (require.main === module) {
+  test()
+}
