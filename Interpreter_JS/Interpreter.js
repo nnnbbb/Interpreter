@@ -50,6 +50,7 @@ class Interpreter extends NodeVisitor {
     node.declarations.map(declaration => visit(declaration))
     visit(node.compoundStatement)
   }
+  visitProcedureDecl (node) { }
   visitVarDecl (node) { }
   visitType (node) { }
   visitNoOp (node) { }
@@ -84,16 +85,29 @@ class Interpreter extends NodeVisitor {
 
 const main = function () {
   let text = `
-              PROGRAM Part10AST;
-              VAR
-                a, b : INTEGER;
-                y    : REAL;
+              PROGRAM Part12;
+VAR
+   a : INTEGER;
 
-              BEGIN {Part10AST}
-                a := 2;
-                b := 10 * a + 10 * a DIV 4;
-                y := 20 / 7 + 3.14;
-              END.  {Part10AST}
+PROCEDURE P1;
+VAR
+   a : REAL;
+   k : INTEGER;
+
+   PROCEDURE P2;
+   VAR
+      a, z : INTEGER;
+   BEGIN {P2}
+      z := 777;
+   END;  {P2}
+
+BEGIN {P1}
+
+END;  {P1}
+
+BEGIN {Part12}
+   a := 10;
+END.  {Part12}
              `
   let lexer = new Lexer(text)
   let parser = new Parser(lexer)

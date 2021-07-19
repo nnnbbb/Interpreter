@@ -23,6 +23,7 @@ class SymbolTableBuilder extends NodeVisitor {
     this.visit(node.left)
     this.visit(node.right)
   }
+  visitProcedureDecl (node) { }
   visitNum (node) { }
   visitNoOp (node) { }
   visitUnaryOp (node) {

@@ -22,6 +22,7 @@ const {
   REAL,
   DOT,
   EOF,
+  PROCEDURE,
 } = require('..')
 const { BinOp } = require('./BinOp')
 const { Num } = require('./Num')
@@ -34,6 +35,7 @@ const { Block } = require('./Block')
 const { Program } = require('./Program')
 const { Type } = require('./Type')
 const { VarDecl } = require('./VarDecl')
+const { ProcedureDecl } = require('./ProcedureDecl')
 const { Lexer } = require('../Lexer')
 // const { log } = require('../log')
 
@@ -73,7 +75,8 @@ class Parser {
     return node
   }
   declarations () {
-    // declarations : VAR (variableDeclaration SEMI)+
+    // declarations : VAR (variable_declaration SEMI)+
+    //              | (PROCEDURE ID SEMI block SEMI)*
     //              | empty
     let declarations = []
     if (this.currentToken.type == VAR) {
@@ -82,6 +85,17 @@ class Parser {
     while (this.currentToken.type == ID) {
       let varDecl = this.variableDeclaration()
       declarations = declarations.concat(varDecl)
+      this.eat(SEMI)
+    }
+
+    while (this.currentToken.type == PROCEDURE) {
+      this.eat(PROCEDURE)
+      let procName = this.currentToken.value
+      this.eat(ID)
+      this.eat(SEMI)
+      let blockNode = this.block()
+      let procDecl = ProcedureDecl.new(procName, blockNode)
+      declarations.push(procDecl)
       this.eat(SEMI)
     }
     return declarations

@@ -21,6 +21,7 @@ const FLOAT_DIV     = 'FLOAT_DIV'
 const INTEGER_CONST = 'INTEGER_CONST'
 const REAL_CONST    = 'REAL_CONST'
 const REAL          = 'REAL'
+const PROCEDURE     = 'PROCEDURE'
 
 module.exports = {
   INTEGER,
@@ -46,4 +47,5 @@ module.exports = {
   INTEGER_CONST,
   REAL_CONST,
   REAL,
+  PROCEDURE,
 }

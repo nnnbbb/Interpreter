@@ -48,6 +48,7 @@ const RESERVED_KEYWORDS = {
   REAL: new Token('REAL', 'REAL'),
   BEGIN: new Token('BEGIN', 'BEGIN'),
   END: new Token('END', 'END'),
+  PROCEDURE: new Token('PROCEDURE', 'PROCEDURE'),
 }
 class Lexer {
   constructor(text) {
@@ -149,13 +150,13 @@ class Lexer {
       }
       if (this.currentChar == '{') {
         this.advance()
-        this.skipComment1()
+        this.skipComment()
         continue
       }
       if (this.currentChar == '/' && this.peek() == '/') {
         this.advance()
         this.advance()
-        this.skipComment()
+        this.skipComment1()
         continue
       }
       if (this.currentChar.isdigit()) {
