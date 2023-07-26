@@ -1,15 +1,3 @@
-""" SPI - Simple Pascal Interpreter """
-
-###############################################################################
-#                                                                             #
-#  LEXER                                                                      #
-#                                                                             #
-###############################################################################
-
-# Token types
-#
-# EOF (end-of-file) token is used to indicate that
-# there is no more input left for lexical analysis
 INTEGER, PLUS, MINUS, MUL, DIV, LPAREN, RPAREN, EOF = (
     'INTEGER', 'PLUS', 'MINUS', 'MUL', 'DIV', '(', ')', 'EOF'
 )
@@ -39,10 +27,11 @@ class Token(object):
 
 class Lexer(object):
     def __init__(self, text):
-        # client string input, e.g. "4 + 2 * 3 - 6 / 2"
+        # 输入的表达式, 例如 "3 * 5", "12 / 3 * 4"
         self.text = text
-        # self.pos is an index into self.text
+        # 索引
         self.pos = 0
+        # 当前解析的字符串
         self.current_char = self.text[self.pos]
 
     def error(self):
@@ -61,7 +50,7 @@ class Lexer(object):
             self.advance()
 
     def integer(self):
-        """Return a (multidigit) integer consumed from the input."""
+        # 解析数字
         result = ''
         while self.current_char is not None and self.current_char.isdigit():
             result += self.current_char
@@ -69,11 +58,6 @@ class Lexer(object):
         return int(result)
 
     def get_next_token(self):
-        """Lexical analyzer (also known as scanner or tokenizer)
-
-        This method is responsible for breaking a sentence
-        apart into tokens. One token at a time.
-        """
         while self.current_char is not None:
 
             if self.current_char.isspace():
@@ -145,10 +129,9 @@ class Parser(object):
         raise Exception('Invalid syntax')
 
     def eat(self, token_type):
-        # compare the current token type with the passed token
-        # type and if they match then "eat" the current token
-        # and assign the next token to the self.current_token,
-        # otherwise raise an exception.
+        # 将当前 token 类型与传递的令牌进行比较
+        # 类型，如果它们匹配，则 “吃掉” 当前令牌, 并将下一个 token 分配给 self.current_token
+        # 否则引发异常
         if self.current_token.type == token_type:
             self.current_token = self.lexer.get_next_token()
         else:
@@ -243,19 +226,19 @@ class Interpreter(NodeVisitor):
 
 
 def main():
-    while True:
-        try:
-            text = input('spi> ')
-        except EOFError:
-            break
-        if not text:
-            continue
-
-        lexer = Lexer(text)
-        parser = Parser(lexer)
-        interpreter = Interpreter(parser)
-        result = interpreter.interpret()
-        print(result)
+    # while True:
+    #     try:
+    #         text = input('spi> ')
+    #     except EOFError:
+    #         break
+    #     if not text:
+    #         continue
+    text = '1 + - 1'
+    lexer = Lexer(text)
+    parser = Parser(lexer)
+    interpreter = Interpreter(parser)
+    result = interpreter.interpret()
+    print(result)
 
 
 if __name__ == '__main__':

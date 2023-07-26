@@ -33,10 +33,11 @@ class Token(object):
 
 class Lexer(object):
     def __init__(self, text):
-        # client string input, e.g. "3 * 5", "12 / 3 * 4", etc
+        # 输入的表达式, 例如 "3 * 5", "12 / 3 * 4"
         self.text = text
-        # self.pos is an index into self.text
+        # 索引
         self.pos = 0
+        # 当前解析的字符串
         self.current_char = self.text[self.pos]
 
     def error(self):
@@ -108,10 +109,9 @@ class Interpreter(object):
         raise Exception('Invalid syntax')
 
     def eat(self, token_type):
-        # compare the current token type with the passed token
-        # type and if they match then "eat" the current token
-        # and assign the next token to the self.current_token,
-        # otherwise raise an exception.
+        # 将当前 token 类型与传递的令牌进行比较
+        # 类型，如果它们匹配，则 “吃掉” 当前令牌, 并将下一个 token 分配给 self.current_token
+        # 否则引发异常
         if self.current_token.type == token_type:
             self.current_token = self.lexer.get_next_token()
         else:

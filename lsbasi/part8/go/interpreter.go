@@ -241,7 +241,6 @@ func (parser *Parser) factor() *AST {
 func (parser *Parser) term() *AST {
 	node := parser.factor()
 
-	// TODO: 为什么这里用 for 循环
 	for parser.currentToken.tokenType == MUL ||
 		parser.currentToken.tokenType == DIV ||
 		parser.currentToken.tokenType == MOD {
