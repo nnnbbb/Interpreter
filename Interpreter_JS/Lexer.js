@@ -97,11 +97,11 @@ class Lexer {
     return token
   }
   peek () {
-    let peek_pos = this.pos + 1
-    if (peek_pos > this.text.length - 1) {
+    let peekPos = this.pos + 1
+    if (peekPos > this.text.length - 1) {
       return null
     } else {
-      return this.text[peek_pos]
+      return this.text[peekPos]
     }
   }
 
@@ -230,10 +230,12 @@ function test () {
 
               BEGIN {Part10}
                 BEGIN
+                  BEGIN
                     number := 2;
                     a := number;
                     b := 10 * a + 10 * number DIV 4;
                     c := a - - b
+                  END;
                 END;
                 x := 11;
                 y := 20 / 7 + 3.14;
