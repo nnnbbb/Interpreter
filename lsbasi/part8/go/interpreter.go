@@ -298,7 +298,6 @@ func (parser *Parser) parse() *AST {
 
 func (parser *Parser) each() {
 	for parser.currentToken.tokenType != EOF {
-		fmt.Println("current token ->", parser.currentToken)
 		parser.currentToken = parser.lexer.getNextToken()
 	}
 }
@@ -445,19 +444,20 @@ func testExpression8() {
 }
 
 func main() {
-	// lexer := NewLexer("8 / -8 % 6")
-	// parser := NewParser(lexer)
+	lexer := NewLexer("8 / -8 % 6")
+	parser := NewParser(lexer)
 	// parser.each()
-	// interpreter := NewInterpreter(parser)
-	// r := interpreter.interpret()
-	// fmt.Println("r ->", r)
-	// fmt.Println("r ->", 8/-8%6)
-	testExpression1()
-	testExpression2()
-	testExpression3()
-	testExpression4()
-	testExpression5()
-	testExpression6()
-	testExpression7()
-	testExpression8()
+	interpreter := NewInterpreter(parser)
+	r := interpreter.interpret()
+	fmt.Println("r ->", r)
+	fmt.Println("r ->", 8/-8%6)
+	// 1e10
+	// testExpression1()
+	// testExpression2()
+	// testExpression3()
+	// testExpression4()
+	// testExpression5()
+	// testExpression6()
+	// testExpression7()
+	// testExpression8()
 }

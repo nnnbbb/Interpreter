@@ -138,7 +138,10 @@ class Parser(object):
             self.error()
 
     def factor(self):
-        """factor : INTEGER | LPAREN expr RPAREN"""
+        """
+        factor(因子)
+        factor : INTEGER | LPAREN expr RPAREN
+        """
         token = self.current_token
         if token.type == INTEGER:
             self.eat(INTEGER)
@@ -150,7 +153,10 @@ class Parser(object):
             return node
 
     def term(self):
-        """term : factor ((MUL | DIV) factor)*"""
+        """
+        term(项)
+        term : factor ((MUL | DIV) factor)*
+        """
         node = self.factor()
 
         while self.current_token.type in (MUL, DIV):
@@ -163,12 +169,13 @@ class Parser(object):
             node = BinOp(left=node, op=token, right=self.factor())
 
         return node
-
+    
     def expr(self):
         """
+        expr(表达式)
         expr   : term ((PLUS | MINUS) term)*
         term   : factor ((MUL | DIV) factor)*
-        factor : INTEGER | LPAREN expr RPAREN
+        factor : INTEGER 
         """
         node = self.term()
 
